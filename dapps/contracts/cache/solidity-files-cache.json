@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\dwiya\\pamulang-university-short-course-DwiYantoro\\dapps\\contracts\\contracts\\simple-storage.sol": {
-      "lastModificationDate": 1768385662216,
-      "contentHash": "59361a4b5c6c2bf1793bcfbedd5ef330",
+      "lastModificationDate": 1768455464043,
+      "contentHash": "4e1993ef9f7cd1ffaeac0be31ac5e73d",
       "sourceName": "contracts/simple-storage.sol",
       "solcConfig": {
         "version": "0.8.27",
