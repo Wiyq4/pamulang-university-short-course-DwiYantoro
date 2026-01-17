@@ -1,0 +1,26 @@
+/* Top bar */
+.swagger-ui .topbar {
+  background-color: #0f172a;
+}
+
+/* Title */
+.swagger-ui .info h2 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Description text */
+.swagger-ui .info p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Custom footer badge */
+.swagger-ui::after {
+  content: "Dwi Yantoro | NIM: 231011403367";
+  display: block;
+  text-align: center;
+  margin: 24px 0;
+  font-weight: 600;
+  color: #dee2e7;
+}
