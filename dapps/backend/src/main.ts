@@ -3,14 +3,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import * as dotenv from "dotenv";
-dotenv.config();
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // serve public folder
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
   const config = new DocumentBuilder()
@@ -25,11 +24,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-
   SwaggerModule.setup('documentation', app, document, {
     customCssUrl: '/swagger.css',
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+
+  console.log(`🚀 Server running on port ${port}`);
 }
 bootstrap();
