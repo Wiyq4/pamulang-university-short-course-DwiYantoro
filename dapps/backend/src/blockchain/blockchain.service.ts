@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   ServiceUnavailableException,
 } from "@nestjs/common";
+
 import { createPublicClient, http } from "viem";
 import { avalancheFuji } from "viem/chains";
 import { SIMPLE_STORAGE_ABI } from "./simple-storage.abi";
@@ -13,17 +14,27 @@ export class BlockchainService {
   private contractAddress: `0x${string}`;
 
   constructor() {
+    const rpcUrl = process.env.RPC_URL;
+    const contractAddress = process.env.CONTRACT_ADDRESS;
+
+    if (!rpcUrl) {
+      throw new Error("RPC_URL belum diset di env");
+    }
+
+    if (!contractAddress) {
+      throw new Error("CONTRACT_ADDRESS belum diset di env");
+    }
+
     this.client = createPublicClient({
       chain: avalancheFuji,
-      transport: http("https://api.avax-test.network/ext/bc/C/rpc", {
-        timeout: 10_000, // 10 detik timeout
+      transport: http(rpcUrl, {
+        timeout: 10_000,
       }),
     });
 
-    this.contractAddress = "0x0484828Af574805f4f7D5e3257bbc2Bf67235268";
+    this.contractAddress = contractAddress as `0x${string}`;
   }
 
-  // 🔹 Read latest value
   async getLatestValue() {
     try {
       const value = await this.client.readContract({
@@ -32,15 +43,12 @@ export class BlockchainService {
         functionName: "getValue",
       });
 
-      return {
-        value: value.toString(),
-      };
+      return { value: value.toString() };
     } catch (error: any) {
       this.handleRpcError(error);
     }
   }
 
-  // 🔹 Read events
   async getValueUpdatedEvents() {
     try {
       const events = await this.client.getLogs({
@@ -64,7 +72,6 @@ export class BlockchainService {
     }
   }
 
-  // 🔹 Centralized RPC Error Handler
   private handleRpcError(error: any): never {
     const message = error?.message?.toLowerCase() || "";
 
