@@ -38,10 +38,10 @@ export default function ClientStorage() {
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
   const { address, isConnected, chain } = useAccount();
-  const { connect } = useConnect();
+  const { connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const { data: value, refetch } = useReadContract({
+  const { data: value, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: SIMPLE_STORAGE_ABI,
     functionName: 'getValue',
@@ -51,68 +51,76 @@ export default function ClientStorage() {
 
   const { writeContractAsync } = useWriteContract();
 
-  const { isLoading: isConfirming } =
-    useWaitForTransactionReceipt({ hash: txHash });
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
 
   useEffect(() => setMounted(true), []);
 
-  const handleSetValue = async () => {
-    if (!inputValue) return;
-
-    const hash = await writeContractAsync({
-      address: CONTRACT_ADDRESS,
-      abi: SIMPLE_STORAGE_ABI,
-      functionName: 'setValue',
-      args: [BigInt(inputValue)],
-    });
-
-    setTxHash(hash);
-    setInputValue('');
-    refetch();
-  };
+  useEffect(() => {
+    if (!isConfirming && txHash) {
+      refetch();
+      setTxHash(undefined);
+      setInputValue('');
+    }
+  }, [isConfirming, txHash, refetch]);
 
   if (!mounted) return null;
 
   return (
-    <section className="border border-white/10 rounded-lg p-4 space-y-3">
-      {!isConnected ? (
-        <button
-          onClick={() => connect({ connector: injected() })}
-          className="px-4 py-2 bg-blue-600 rounded"
-        >
-          Connect Wallet
-        </button>
-      ) : (
-        <>
-          <p className="text-xs text-gray-400 break-all">{address}</p>
-
-          <p className="text-xl font-bold">
-            Client Read: {value?.toString()}
-          </p>
-
-          <input
-            type="number"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="w-full p-2 bg-black border border-white/10"
-          />
-
+    <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
+      <div className="w-full max-w-sm border border-white/10 rounded-xl p-4 space-y-4">
+        {!isConnected ? (
           <button
-            onClick={handleSetValue}
-            disabled={isConfirming}
-            className="px-4 py-2 bg-green-600 rounded"
+            onClick={() => connect({ connector: injected() })}
+            disabled={isPending}
+            className="w-full bg-blue-600 py-2 rounded"
           >
-            Set Value
+            {isPending ? 'Connecting...' : 'Connect Wallet'}
           </button>
+        ) : (
+          <>
+            <p className="text-xs break-all">{address}</p>
+            <p className="text-sm text-blue-400">
+              Network: {chain?.name}
+            </p>
 
-          <button
-            onClick={() => disconnect()}
-            className="text-xs text-red-400 underline"
-          >
-            Disconnect
-          </button>
-        </>
-      )}
-    </section>
+            <p className="text-3xl font-bold text-center">
+              {isLoading ? '...' : value?.toString()}
+            </p>
+
+            <input
+              type="number"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full p-2 bg-black border border-white/10 rounded"
+            />
+
+            <button
+              onClick={async () => {
+                const hash = await writeContractAsync({
+                  address: CONTRACT_ADDRESS,
+                  abi: SIMPLE_STORAGE_ABI,
+                  functionName: 'setValue',
+                  args: [BigInt(inputValue)],
+                });
+                setTxHash(hash);
+              }}
+              disabled={isConfirming}
+              className="w-full bg-green-600 py-2 rounded"
+            >
+              {isConfirming ? 'Confirming...' : 'Set Value'}
+            </button>
+
+            <button
+              onClick={() => disconnect()}
+              className="text-xs text-red-400 underline"
+            >
+              Disconnect
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
